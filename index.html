@@ -3,23 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f4f2">
-  <meta name="description" content="周志儒的视频创作与剪辑作品集。精选校内宣传、商单短视频、MV、日常 Vlog 与纪录影像。">
+  <meta name="theme-color" content="#f4f5ef">
+  <meta name="description" content="周志儒的个人简历与视频作品集。浏览校内宣传、商单短视频、MV、Vlog 与纪录影像。">
   <title>周志儒｜视频创作与剪辑作品集</title>
   <link rel="stylesheet" href="./styles.css">
   <script defer src="./app.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳转到主要内容</a>
-  <header class="site-header" id="site-header">
-    <div class="header-left"><span id="local-time" aria-hidden="true"></span><a class="site-name" href="#/">周志儒</a></div>
-    <span class="header-role">VIDEO EDITOR & CONTENT CREATOR</span>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="site-name" href="#/" aria-label="周志儒，返回首页">
+        <span class="site-mark" aria-hidden="true"></span>
+        <span>周志儒<span class="site-name-label">作品集</span></span>
+      </a>
+      <nav class="site-nav" aria-label="主要导航">
+        <a href="#/" data-nav="home">首页</a>
+        <a href="#/work" data-nav="work">作品</a>
+        <a href="#/about" data-nav="about">简历</a>
+      </nav>
+      <a class="header-contact" href="#/about/contact">联系我</a>
+    </div>
   </header>
-  <main id="main"></main>
-  <nav class="floating-nav" aria-label="主要导航">
-    <a href="#/" data-nav="home">首页</a>
-    <a href="#/work" data-nav="work">作品</a>
-    <a href="#/about" data-nav="about">关于</a>
-  </nav>
+  <main id="main" tabindex="-1">
+    <noscript><p class="page">请启用 JavaScript 浏览作品和简历。</p></noscript>
+  </main>
+  <dialog class="process-viewer" id="process-viewer" aria-labelledby="viewer-title">
+    <div class="viewer-panel">
+      <header class="viewer-header">
+        <h2 id="viewer-title"></h2>
+        <form method="dialog"><button type="submit" autofocus>关闭</button></form>
+      </header>
+      <div class="viewer-image"><img alt=""></div>
+      <footer class="viewer-controls">
+        <div class="viewer-navigation">
+          <button type="button" id="viewer-previous">上一张</button>
+          <span id="viewer-count" aria-live="polite"></span>
+          <button type="button" id="viewer-next">下一张</button>
+        </div>
+        <a id="viewer-original" target="_blank" rel="noopener">打开原图</a>
+      </footer>
+    </div>
+  </dialog>
 </body>
 </html>

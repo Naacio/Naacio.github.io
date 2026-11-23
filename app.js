@@ -75,77 +75,352 @@ const brandProcess = [
   ] }
 ];
 
-const main = document.querySelector('#main');
-const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const media = id => `./media/${id}`;
-const footer = `<footer class="footer"><span>© ${new Date().getFullYear()} 周志儒</span><span>视频创作 · 剪辑 · 内容运营</span></footer>`;
 
-function card(work) {
-  return `<a class="card" href="#/work/${work.slug}" aria-label="查看分类：${escapeHtml(work.title)}">
-    <img src="${media(work.cover)}.jpg" alt="${escapeHtml(work.title)}作品画面" loading="lazy">
-    <span class="card-inner"><span class="card-tag">${work.label}</span><span class="card-bottom"><span><span class="card-title">${escapeHtml(work.title)}</span><br><span class="card-count">精选 ${work.videos.length} 部作品</span></span><span class="card-arrow" aria-hidden="true">↗</span></span></span>
+const main = document.querySelector('#main');
+const nav = [...document.querySelectorAll('[data-nav]')];
+const phone = { label: '198 3887 8929', url: 'tel:+8619838878929' };
+const email = { label: '19838878929@163.com', url: 'mailto:19838878929@163.com' };
+const featured = works.flatMap(work => work.videos.map(video => ({
+  ...video,
+  caption: video.title.split('｜')[0],
+  category: work.title,
+  poster: `./media/${video.id}.jpg`,
+  href: `#/work/${work.slug}/${video.id}`
+})));
+const totalVideos = featured.length;
+const isLocalPreview = location.protocol === 'file:' || ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+const videoDirectory = isLocalPreview ? 'https://naacio.github.io/media/' : './media/';
+
+const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[char]));
+
+const contactLinks = `<a href="${phone.url}">${phone.label}</a><a href="${email.url}">${email.label}</a>`;
+const footer = `<footer class="site-footer">
+  <span>© ${new Date().getFullYear()} 周志儒</span>
+  <a href="#/about/contact">联系方式</a>
+</footer>`;
+
+function workCard(work, headingLevel) {
+  const isPortrait = work.videos.find(video => video.id === work.cover).portrait;
+  return `<a class="work-card work-card--${work.slug}" href="#/work/${work.slug}">
+    <div class="work-cover${isPortrait ? ' work-cover--portrait' : ''}" style="--cover: url('./media/${work.cover}.jpg')">
+      <img src="./media/${work.cover}.jpg" alt="" loading="lazy" decoding="async">
+      <span class="work-count">${work.videos.length} 部视频</span>
+    </div>
+    <div class="work-caption">
+      <div>
+        <p class="section-label">${work.label}</p>
+        <${headingLevel}>${escapeHtml(work.title)}</${headingLevel}>
+        <p class="work-description">${escapeHtml(work.intro)}</p>
+      </div>
+      <span class="card-action" aria-hidden="true">查看</span>
+    </div>
   </a>`;
 }
 
+function workGrid(headingLevel = 'h3') {
+  return `<div class="work-grid">${works.map(work => workCard(work, headingLevel)).join('')}</div>`;
+}
+
 function renderHome() {
+  const first = featured[0];
   main.innerHTML = `<div class="page">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="eyebrow"><span class="line"></span> 周志儒 / 视频创作与剪辑</div>
-      <h1 id="hero-title"><span class="hero-prefix">个人作品集</span><span class="hero-tagline">让每一帧，<br>都更有<em>表达。</em></span></h1>
-      <div class="hero-copy"><p>我是周志儒，本科就读于浙江大学国际新闻专业，现为浙江大学戏剧与影视专业硕士在读。曾参与留学博主账号运营、浙江省林业融媒体中心内容制作及校园影像项目，积累了选题策划、脚本撰写、拍摄剪辑与内容复盘的实践经验。</p><small>向下探索作品 ↓</small></div>
+    <section class="showcase" aria-labelledby="hero-title">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="section-label hero-label">VIDEO EDITOR <span aria-hidden="true">/</span> CONTENT CREATOR</p>
+          <h1 id="hero-title">周志儒</h1>
+          <p class="hero-role">视频创作与剪辑</p>
+          <p class="hero-intro">浙江大学戏剧与影视专业硕士在读。参与过校园影像、留学博主账号运营和融媒体内容制作，实践涵盖选题策划、脚本撰写、拍摄剪辑和内容复盘。</p>
+          <div class="hero-actions">
+            <a class="button button--accent" href="#/work">浏览作品</a>
+            <a class="button button--light" href="#/about">查看简历</a>
+          </div>
+        </div>
+        <div class="hero-art${first.portrait ? ' hero-art--portrait' : ''}" aria-hidden="true" style="--feature-poster: url('${first.poster}')">
+          <img class="hero-still" src="${first.poster}" alt="" fetchpriority="high">
+        </div>
+        <div class="hero-feature">
+          <div class="feature-copy" aria-live="polite">
+            <strong id="feature-title">《${escapeHtml(first.caption)}》</strong>
+            <span id="feature-source">${escapeHtml(first.source)}</span>
+          </div>
+          <a class="feature-play" id="feature-play" href="${first.href}" aria-label="观看《${escapeHtml(first.title)}》"><span class="play-icon" aria-hidden="true"></span></a>
+        </div>
+      </div>
+      <div class="feature-picker">
+        <div class="feature-picker-head">
+          <p><strong>全部作品</strong> <span>${totalVideos} 部</span></p>
+          <div class="feature-scroll-actions">
+            <button type="button" data-feature-scroll="-1" aria-controls="feature-strip" aria-disabled="true">上一组</button>
+            <button type="button" data-feature-scroll="1" aria-controls="feature-strip">下一组</button>
+          </div>
+        </div>
+        <div class="feature-strip" id="feature-strip" role="group" aria-label="切换封面作品">
+          ${featured.map((item, index) => `<button class="feature-choice" type="button" data-feature="${index}" aria-pressed="${index === 0}" title="${escapeHtml(item.title)}">
+            <img src="${item.poster}" alt="" width="64" height="40" loading="lazy" decoding="async">
+            <span><strong>${escapeHtml(item.caption)}</strong><small>${escapeHtml(item.category)}</small></span>
+          </button>`).join('')}
+        </div>
+      </div>
     </section>
-    <section id="work" aria-labelledby="work-title"><div class="section-head"><h2 id="work-title">精选作品 / WORK</h2><p>五个方向，了解我的创作实践</p></div><div class="work-grid">${works.map(card).join('')}</div></section>
-    <section class="info-strip" aria-label="个人简介"><div><div class="info-label">目前</div><p>浙江大学<br>戏剧与影视专业硕士在读</p></div><div><div class="info-label">关注领域</div><p>视频剪辑、内容策划<br>新媒体运营<br>公众号文案与排版</p></div><div><div class="info-label">联系</div><p class="contact-lines"><a href="tel:+8619838878929">198 3887 8929</a><br><a href="mailto:19838878929@163.com">19838878929@163.com</a></p></div></section>
+    <section class="home-work" aria-labelledby="work-title">
+      <div class="section-heading">
+        <div><p class="section-label">SELECTED WORK</p><h2 id="work-title">精选作品</h2></div>
+        <p class="section-count">${works.length} 类创作 <span aria-hidden="true">/</span> ${totalVideos} 部视频</p>
+      </div>
+      ${workGrid()}
+    </section>
+    <section class="home-profile" aria-labelledby="profile-title">
+      <div>
+        <p class="section-label">PROFILE</p>
+        <h2 id="profile-title">个人简历</h2>
+        <p>浙江大学国际新闻本科、戏剧与影视专业硕士在读。实践方向包括视频剪辑、内容策划、新媒体运营和公众号文案与排版。</p>
+        <a class="button button--outline" href="#/about">教育与实践经历</a>
+      </div>
+      <div class="home-contact"><h3>联系方式</h3>${contactLinks}</div>
+    </section>
     ${footer}
   </div>`;
   document.title = '周志儒｜视频创作与剪辑作品集';
+  document.getElementById('feature-strip').addEventListener('scroll', updateFeatureScroll, { passive: true });
+  updateFeatureScroll();
+}
+
+function selectFeature(index) {
+  const item = featured[index];
+  main.querySelector('#feature-title').textContent = `《${item.caption}》`;
+  main.querySelector('#feature-source').textContent = item.source;
+  const playLink = main.querySelector('#feature-play');
+  playLink.href = item.href;
+  playLink.setAttribute('aria-label', `观看《${item.title}》`);
+  const art = main.querySelector('.hero-art');
+  art.classList.toggle('hero-art--portrait', item.portrait);
+  art.style.setProperty('--feature-poster', `url('${item.poster}')`);
+  art.querySelector('img').src = item.poster;
+  main.querySelectorAll('.feature-choice').forEach((button, position) => {
+    button.setAttribute('aria-pressed', String(position === index));
+  });
+}
+
+function updateFeatureScroll() {
+  const strip = document.getElementById('feature-strip');
+  if (!strip) return;
+  const [previous, next] = main.querySelectorAll('[data-feature-scroll]');
+  previous.setAttribute('aria-disabled', String(strip.scrollLeft <= 1));
+  next.setAttribute('aria-disabled', String(strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1));
+}
+
+function renderWork() {
+  main.innerHTML = `<div class="page">
+    <header class="page-heading">
+      <p class="section-label">PORTFOLIO</p>
+      <h1>作品目录</h1>
+      <p>按类别浏览 ${totalVideos} 部视频。</p>
+    </header>
+    <section aria-label="作品分类">${workGrid('h2')}</section>
+    ${footer}
+  </div>`;
+  document.title = '作品目录｜周志儒';
 }
 
 function videoCard(video) {
-  return `<article class="video-card"><div class="video-frame ${video.portrait ? 'portrait' : ''}"><video controls playsinline preload="none" poster="${media(video.id)}.jpg" aria-label="播放${escapeHtml(video.title)}"><source src="${media(video.id)}.mp4" type="video/mp4">你的浏览器暂不支持视频播放。</video></div><div class="video-copy"><div><h2>${escapeHtml(video.title)}</h2><p>${escapeHtml(video.source)}</p></div><span>VIDEO</span></div></article>`;
+  const title = escapeHtml(video.title);
+  return `<article class="video-card" id="video-${video.id}" tabindex="-1">
+    <div class="video-frame${video.portrait ? ' video-frame--portrait' : ''}">
+      <video controls playsinline preload="none" poster="./media/${video.id}.jpg" aria-label="播放 ${title}">
+        <source src="${videoDirectory}${video.id}.mp4" type="video/mp4">
+        你的浏览器暂不支持视频播放。
+      </video>
+    </div>
+    <div class="video-copy"><h2>${title}</h2><p>${escapeHtml(video.source)}</p>
+      <a class="video-fallback" href="${videoDirectory}${video.id}.mp4" target="_blank" rel="noopener" hidden>在新标签页打开视频</a>
+    </div>
+  </article>`;
 }
 
 function renderBrandProcess() {
   return `<section class="process-gallery" aria-labelledby="process-title">
-    <div class="process-head"><h2 id="process-title">部分项目的品牌沟通策划和脚本截图</h2><p>策划 / 大纲 / 脚本 / 交付</p></div>
-    ${brandProcess.map(group => `<div class="process-stage"><h3>${escapeHtml(group.stage)}</h3><div class="process-images">${group.images.map(item => `<a class="process-item" href="${media(`process/${item.file}`)}" target="_blank" rel="noopener noreferrer" aria-label="查看原图：${escapeHtml(item.title)}"><span class="process-shot"><img src="${media(`process/${item.file}`)}" alt="${escapeHtml(item.title)}截图" loading="lazy" decoding="async"></span><span class="process-caption"><span>${escapeHtml(item.title)}</span><small>查看原图</small></span></a>`).join('')}</div></div>`).join('')}
+    <div class="section-heading"><div><p class="section-label">PRODUCTION PROCESS</p><h2 id="process-title">商单制作流程</h2></div></div>
+    ${brandProcess.map(group => `<div class="process-stage">
+      <h3>${escapeHtml(group.stage)}</h3>
+      <div class="process-images">${group.images.map(item => `<a class="process-item" href="./media/process/${item.file}" target="_blank" rel="noopener" data-title="${escapeHtml(item.title)}">
+        <span class="process-shot"><img src="./media/process/${item.file}" alt="" loading="lazy" decoding="async"></span>
+        <span class="process-caption">${escapeHtml(item.title)} <small>放大查看</small></span>
+      </a>`).join('')}</div>
+    </div>`).join('')}
   </section>`;
 }
 
 function renderDetail(work) {
   const next = works[(works.indexOf(work) + 1) % works.length];
+  const portrait = work.videos.every(video => video.portrait);
   main.innerHTML = `<div class="page">
-    <section class="detail-hero"><a class="back-link" href="#/work">← 返回全部作品</a><div class="eyebrow"><span class="line"></span>${work.label}</div><h1>${escapeHtml(work.title)}</h1><div class="detail-meta"><p>${escapeHtml(work.intro)}</p><span>精选 ${work.videos.length} 部作品</span></div></section>
-    <section class="video-grid" aria-label="${escapeHtml(work.title)}视频">${work.videos.map(videoCard).join('')}</section>
-    <section class="detail-note"><h2>项目背景</h2><p>${escapeHtml(work.note)}</p></section>
+    <header class="page-heading">
+      <a class="back-link" href="#/work">全部作品</a>
+      <p class="section-label">${work.label}</p>
+      <h1>${escapeHtml(work.title)}</h1>
+      <p>${escapeHtml(work.intro)}</p>
+      <nav class="category-nav" aria-label="作品分类">
+        ${works.map(category => `<a href="#/work/${category.slug}"${category === work ? ' aria-current="page"' : ''}>${escapeHtml(category.title)}</a>`).join('')}
+      </nav>
+    </header>
+    <section class="video-grid${portrait ? ' video-grid--portrait' : ''}" aria-label="${escapeHtml(work.title)}视频">${work.videos.map(videoCard).join('')}</section>
+    <section class="detail-note">
+      <h2>项目背景</h2>
+      <p>${escapeHtml(work.note)}</p>
+    </section>
     ${work.slug === 'brand' ? renderBrandProcess() : ''}
-    <a class="next-work" href="#/work/${next.slug}"><span><small>继续浏览</small><br><strong>${escapeHtml(next.title)}</strong></span><strong aria-hidden="true">↗</strong></a>
+    <a class="next-work" href="#/work/${next.slug}"><span class="section-label">下一类作品</span><strong>${escapeHtml(next.title)}</strong></a>
     ${footer}
   </div>`;
   document.title = `${work.title}｜周志儒作品集`;
 }
 
 function renderAbout() {
-  main.innerHTML = `<div class="page"><section class="detail-hero"><a class="back-link" href="#/">← 返回首页</a><div class="eyebrow"><span class="line"></span>ABOUT ME</div><h1>关于我</h1></section>
-    <div class="about-layout"><span class="about-label">周志儒 / VIDEO EDITOR</span><p class="about-text">我本科就读于浙江大学国际新闻专业，现为浙江大学戏剧与影视专业硕士在读。曾参与留学博主账号运营、林业融媒体中心内容制作及校园影像项目，持续探索不同平台上的内容叙事与影像表达。</p></div>
-    <div class="about-details"><section><h2>教育经历</h2><p>浙江大学 · 国际新闻本科<br><small>2022.09 — 2026.06</small></p><p>浙江大学 · 戏剧与影视专业硕士在读<br><small>2026.06 — 至今</small></p></section><section><h2>相关实践</h2><p>海外留学博主账号运营<br><small>Mavis 在麻省理工 / Cindy 留学</small></p><p>浙江省林业融媒体中心<br><small>新闻与新媒体运营实习</small></p><p>上海梅维若有所思教育科技有限公司<br><small>产品运营实习</small></p></section></div>
-    <section class="info-strip"><div><div class="info-label">工作方向</div><p>视频创作与剪辑<br>内容策划与运营<br>公众号文案与排版</p></div><div style="grid-column:span 2"><div class="info-label">联系我</div><a class="email-link" href="tel:+8619838878929">198 3887 8929</a><br><a class="email-link" href="mailto:19838878929@163.com">19838878929@163.com</a></div></section>${footer}</div>`;
+  main.innerHTML = `<div class="page">
+    <header class="page-heading">
+      <p class="section-label">ABOUT</p>
+      <h1>周志儒 · 简历</h1>
+      <p>我本科就读于浙江大学国际新闻专业，现为浙江大学戏剧与影视专业硕士在读。曾参与留学博主账号运营、林业融媒体中心内容制作及校园影像项目，持续探索不同平台上的内容叙事与影像表达。</p>
+    </header>
+    <div class="resume-grid">
+      <section class="resume-section">
+        <p class="section-label">EDUCATION</p><h2>教育经历</h2>
+        <ul class="resume-list">
+          <li><small>2026.06 — 至今</small><h3>浙江大学</h3><p>戏剧与影视专业 · 硕士在读</p></li>
+          <li><small>2022.09 — 2026.06</small><h3>浙江大学</h3><p>国际新闻专业 · 本科</p></li>
+        </ul>
+      </section>
+      <section class="resume-section">
+        <p class="section-label">EXPERIENCE</p><h2>相关实践</h2>
+        <ul class="resume-list">
+          <li><h3>海外留学博主账号运营</h3><p>Mavis 在麻省理工 / Cindy 留学</p></li>
+          <li><h3>浙江省林业融媒体中心</h3><p>新闻与新媒体运营实习</p></li>
+          <li><h3>上海梅维若有所思教育科技有限公司</h3><p>产品运营实习</p></li>
+        </ul>
+      </section>
+    </div>
+    <div class="resume-bottom">
+      <section class="resume-section">
+        <p class="section-label">FOCUS</p><h2>工作方向</h2>
+        <ul class="skills"><li>视频创作与剪辑</li><li>内容策划与运营</li><li>公众号文案与排版</li></ul>
+      </section>
+      <section class="resume-section resume-contact" id="contact" tabindex="-1">
+        <p class="section-label">CONTACT</p><h2>联系方式</h2>
+        ${contactLinks}
+      </section>
+    </div>
+    ${footer}
+  </div>`;
   document.title = '关于周志儒｜视频作品集';
 }
 
-function render() {
-  const route = location.hash.slice(1) || '/';
-  const work = works.find(item => route === `/work/${item.slug}`);
-  if (work) renderDetail(work);
-  else if (route === '/about') renderAbout();
-  else renderHome();
-  const active = route === '/about' ? 'about' : route.startsWith('/work') ? 'work' : 'home';
-  document.querySelectorAll('.floating-nav a').forEach(a => { a.classList.toggle('active', a.dataset.nav === active); if (a.dataset.nav === active) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
-  requestAnimationFrame(() => { if (route === '/work') document.querySelector('#work')?.scrollIntoView(); else window.scrollTo(0, 0); });
+function render(navigated = false) {
+  const route = location.hash.slice(1).replace(/\/$/, '') || '/';
+  const [, section, slug, videoId] = route.split('/');
+  const work = section === 'work' ? works.find(item => slug === item.slug) : null;
+  let active = 'home';
+  let destination;
+
+  if (work) {
+    renderDetail(work);
+    active = 'work';
+    if (work.videos.some(video => video.id === videoId)) destination = document.getElementById(`video-${videoId}`);
+  } else if (route === '/work') {
+    renderWork();
+    active = 'work';
+  } else if (route === '/about' || route === '/about/contact') {
+    renderAbout();
+    active = 'about';
+    if (route === '/about/contact') destination = document.getElementById('contact');
+  } else {
+    renderHome();
+  }
+
+  nav.forEach(link => {
+    if (link.dataset.nav === active) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
+
+  if (destination) {
+    destination.focus({ preventScroll: true });
+    destination.scrollIntoView({ block: 'start' });
+  } else {
+    if (navigated) main.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
 }
 
-function clock() {
-  document.querySelector('#local-time').textContent = new Intl.DateTimeFormat('zh-CN', {hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Asia/Shanghai'}).format(new Date());
+document.querySelector('.skip-link').addEventListener('click', event => {
+  event.preventDefault();
+  main.focus();
+});
+
+main.addEventListener('error', event => {
+  const video = event.target.closest('video');
+  const fallback = video?.closest('.video-card').querySelector('.video-fallback');
+  if (fallback) fallback.hidden = false;
+}, true);
+
+main.addEventListener('play', event => {
+  for (const video of main.querySelectorAll('video')) {
+    if (video !== event.target) video.pause();
+  }
+}, true);
+
+const viewer = document.querySelector('#process-viewer');
+const viewerImage = viewer.querySelector('img');
+const viewerTitle = viewer.querySelector('#viewer-title');
+const viewerCount = viewer.querySelector('#viewer-count');
+const viewerOriginal = viewer.querySelector('#viewer-original');
+let processLinks = [];
+let photoIndex = 0;
+
+function showProcessImage(index) {
+  photoIndex = (index + processLinks.length) % processLinks.length;
+  const link = processLinks[photoIndex];
+  viewerImage.src = link.href;
+  viewerImage.alt = link.dataset.title;
+  viewerTitle.textContent = link.dataset.title;
+  viewerCount.textContent = `${photoIndex + 1} / ${processLinks.length}`;
+  viewerOriginal.href = link.href;
 }
-window.addEventListener('hashchange', render);
-clock(); setInterval(clock, 60000); render();
+
+main.addEventListener('click', event => {
+  const feature = event.target.closest('[data-feature]');
+  if (feature) selectFeature(Number(feature.dataset.feature));
+
+  const scrollButton = event.target.closest('[data-feature-scroll]');
+  if (scrollButton && scrollButton.getAttribute('aria-disabled') !== 'true') {
+    const strip = document.getElementById('feature-strip');
+    strip.scrollBy({ left: Number(scrollButton.dataset.featureScroll) * strip.clientWidth * .9 });
+  }
+
+  const processLink = event.target.closest('.process-item');
+  if (!processLink || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || typeof viewer.showModal !== 'function') return;
+  event.preventDefault();
+  processLinks = [...main.querySelectorAll('.process-item')];
+  showProcessImage(processLinks.indexOf(processLink));
+  viewer.showModal();
+});
+
+viewer.querySelector('#viewer-previous').addEventListener('click', () => showProcessImage(photoIndex - 1));
+viewer.querySelector('#viewer-next').addEventListener('click', () => showProcessImage(photoIndex + 1));
+viewer.addEventListener('click', event => {
+  if (event.target === viewer) viewer.close();
+});
+viewer.addEventListener('keydown', event => {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault();
+    showProcessImage(photoIndex + (event.key === 'ArrowLeft' ? -1 : 1));
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  if (viewer.open) viewer.close();
+  render(true);
+});
+window.addEventListener('resize', updateFeatureScroll);
+render();
